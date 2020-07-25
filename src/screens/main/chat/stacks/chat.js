@@ -92,6 +92,12 @@ export default class Chat extends React.Component {
               />
             </TouchableOpacity>
             <TouchableOpacity
+              onPress={(e) =>
+                this.props.navigation.navigate('ProfileStack', {
+                  friendUid: this.state.user.uid,
+                  chatId: this.props.route.params.chatId,
+                })
+              }
               style={{...{flexDirection: 'row', alignItems: 'center'}}}>
               {this.state.user.avatar && (
                 <Image
@@ -163,7 +169,9 @@ export default class Chat extends React.Component {
                 }>
                 <TouchableOpacity style={styled.ballon}>
                   <Text style={styled.textBallon}>{val.msg}</Text>
-                  <Text style={styled.hoursBallon}>03:20 AM</Text>
+                  <Text style={styled.hoursBallon}>
+                    {new Date(val.createdAt).toLocaleTimeString()}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ))}

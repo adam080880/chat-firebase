@@ -67,6 +67,9 @@ export default class Profile extends React.Component {
       {
         title: 'Select Avatar',
         storageOptions: {skipBackup: true, path: 'images'},
+        customButtons: this.state.data.avatar
+          ? [{name: 'remove', title: 'Remove avatar'}]
+          : [],
       },
       async (response) => {
         if (response.error) {
@@ -112,6 +115,10 @@ export default class Profile extends React.Component {
             }
           });
         } else if (response.didCancel) {
+        } else if (response.customButton) {
+          fireStore().collection('userDetails').doc(this.state.id).update({
+            avatar: null,
+          });
         } else {
           const source = {uri: response.uri};
           this.setState({
@@ -153,10 +160,7 @@ export default class Profile extends React.Component {
             })
             .catch(() => {
               Alert.alert('Failed upload');
-              this.setState({avatar: false});
-            })
-            .finally(() => {
-              this.setState({isLoading: false});
+              this.setState({avatar: false, isLoading: false});
             });
         }
       },
@@ -166,137 +170,141 @@ export default class Profile extends React.Component {
   render() {
     return (
       <View style={styled.container}>
-        <View style={styled.alCenter}>
-          <View style={styled.header}>
-            <TouchableOpacity onPress={(e) => this.props.navigation.goBack()}>
-              <Icon
-                name={'arrowleft'}
-                color={'#F7F8F3'}
-                size={25}
-                style={styled.m15}
-              />
-            </TouchableOpacity>
-            {!this.props.route.params && (
-              <TouchableOpacity
-                onPress={(e) => this.props.navigation.navigate('EditProfile')}>
+        {this.state.isLoading && (
+          <ActivityIndicator size={50} color={'#2C3E66'} />
+        )}
+        {!this.state.isLoading && (
+          <View style={styled.alCenter}>
+            <View style={styled.header}>
+              <TouchableOpacity onPress={(e) => this.props.navigation.goBack()}>
                 <Icon
-                  name={'edit'}
+                  name={'arrowleft'}
                   color={'#F7F8F3'}
                   size={25}
                   style={styled.m15}
                 />
               </TouchableOpacity>
-            )}
-          </View>
-          {(!this.state.data || this.state.isLoading) && (
-            <ActivityIndicator style={styled.m15} size={'large'} />
-          )}
-          {this.state.data && !this.state.isLoading && (
-            <>
-              <TouchableOpacity
-                onPress={this.props.route.params ? () => {} : this.changeImage}>
-                {!this.state.data.avatar && (
+              {!this.props.route.params && (
+                <TouchableOpacity
+                  onPress={(e) =>
+                    this.props.navigation.navigate('EditProfile')
+                  }>
+                  <Icon
+                    name={'edit'}
+                    color={'#F7F8F3'}
+                    size={25}
+                    style={styled.m15}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+            {this.state.data && !this.state.isLoading && (
+              <>
+                <TouchableOpacity
+                  onPress={
+                    this.props.route.params ? () => {} : this.changeImage
+                  }>
+                  {!this.state.data.avatar && (
+                    <Text
+                      style={{
+                        ...styled.profileImage,
+                        ...{
+                          backgroundColor: 'white',
+                          textAlign: 'center',
+                          textAlignVertical: 'center',
+                          fontWeight: 'bold',
+                          fontSize: 50,
+                          color: '#2C3E66',
+                          elevation: 3,
+                        },
+                      }}>
+                      {this.state.data.name.slice(0, 2).toUpperCase()}
+                    </Text>
+                  )}
+                  {this.state.data.avatar && (
+                    <Image
+                      resizeMode={'cover'}
+                      style={styled.profileImage}
+                      source={{uri: this.state.data.avatar}}
+                    />
+                  )}
+                </TouchableOpacity>
+                <Text style={styled.title}>{this.state.data.name || ''}</Text>
+                <View style={styled.rowStatus}>
+                  <View
+                    style={{
+                      ...styled.online,
+                      ...{
+                        backgroundColor: this.state.data.isLogin
+                          ? '#AEDDCB'
+                          : '#E5386D',
+                      },
+                    }}
+                  />
+                  <Text style={styled.cardStatus}>
+                    {this.state.data.isLogin ? 'Online' : 'Offline'}
+                  </Text>
+                </View>
+                <View style={{...{flexDirection: 'row'}}}>
+                  {this.props.route.params && (
+                    <TouchableOpacity
+                      style={styled.button}
+                      onPress={(e) => {
+                        this.props.navigation.navigate('ChatStack', {
+                          friendUid: this.state.data.uid,
+                          meUid: auth()._user.uid,
+                          chatId: this.props.route.params.chatId,
+                        });
+                      }}>
+                      <Text
+                        style={{
+                          ...styled.fs13,
+                          ...{color: '#F7F8F3', fontWeight: 'bold'},
+                        }}>
+                        CHAT
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  {!this.props.route.params && <View style={styled.mb30} />}
+                </View>
+
+                <View style={styled.card}>
+                  <Text style={{...{fontWeight: 'bold'}}}>Code: </Text>
                   <Text
                     style={{
-                      ...styled.profileImage,
                       ...{
-                        backgroundColor: 'white',
-                        textAlign: 'center',
-                        textAlignVertical: 'center',
-                        fontWeight: 'bold',
-                        fontSize: 50,
                         color: '#2C3E66',
-                        elevation: 3,
+                        opacity: 0.64,
+                        marginHorizontal: 17,
                       },
                     }}>
-                    {this.state.data.name.slice(0, 2).toUpperCase()}
+                    {this.state.data.code}
                   </Text>
-                )}
-                {this.state.data.avatar && (
-                  <Image
-                    resizeMode={'cover'}
-                    style={styled.profileImage}
-                    source={{uri: this.state.data.avatar}}
-                  />
-                )}
-              </TouchableOpacity>
-              <Text style={styled.title}>{this.state.data.name || ''}</Text>
-              <View style={styled.rowStatus}>
-                <View
-                  style={{
-                    ...styled.online,
-                    ...{
-                      backgroundColor: this.state.data.isLogin
-                        ? '#AEDDCB'
-                        : '#E5386D',
-                    },
-                  }}
-                />
-                <Text style={styled.cardStatus}>
-                  {this.state.data.isLogin ? 'Online' : 'Offline'}
-                </Text>
-              </View>
-              <View style={{...{flexDirection: 'row'}}}>
-                <TouchableOpacity
-                  style={styled.button}
-                  onPress={(e) =>
-                    this.props.navigation.navigate('TrackerStack')
-                  }>
+                </View>
+                <View style={styled.card}>
+                  <Text style={{...{fontWeight: 'bold'}}}>Phone: </Text>
                   <Text
                     style={{
-                      ...styled.fs13,
-                      ...{color: '#F7F8F3', fontWeight: 'bold'},
+                      ...{
+                        color: '#2C3E66',
+                        opacity: 0.64,
+                        marginHorizontal: 17,
+                      },
                     }}>
-                    TRACKING
+                    {this.state.data.phone
+                      .split('')
+                      .map((val, index) =>
+                        (index + 1) % 4 === 0 &&
+                        index !== this.state.data.phone.length - 1
+                          ? val + '-'
+                          : val,
+                      )}
                   </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styled.button}
-                  onPress={(e) => {
-                    this.props.navigation.navigate('ChatStack', {
-                      friendUid: this.state.data.uid,
-                      meUid: auth()._user.uid,
-                      chatId: this.props.route.params.chatId,
-                    });
-                  }}>
-                  <Text
-                    style={{
-                      ...styled.fs13,
-                      ...{color: '#F7F8F3', fontWeight: 'bold'},
-                    }}>
-                    CHAT
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styled.card}>
-                <Text style={{...{fontWeight: 'bold'}}}>Code: </Text>
-                <Text
-                  style={{
-                    ...{color: '#2C3E66', opacity: 0.64, marginHorizontal: 17},
-                  }}>
-                  {this.state.data.code}
-                </Text>
-              </View>
-              <View style={styled.card}>
-                <Text style={{...{fontWeight: 'bold'}}}>Phone: </Text>
-                <Text
-                  style={{
-                    ...{color: '#2C3E66', opacity: 0.64, marginHorizontal: 17},
-                  }}>
-                  {this.state.data.phone
-                    .split('')
-                    .map((val, index) =>
-                      (index + 1) % 4 === 0 &&
-                      index !== this.state.data.phone.length - 1
-                        ? val + '-'
-                        : val,
-                    )}
-                </Text>
-              </View>
-            </>
-          )}
-        </View>
+                </View>
+              </>
+            )}
+          </View>
+        )}
         <View style={styled.mb30} />
       </View>
     );

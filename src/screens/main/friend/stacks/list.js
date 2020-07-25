@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import Icon from 'react-native-vector-icons/AntDesign';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
@@ -159,6 +160,30 @@ export default class Friend extends React.Component {
           }}>
           <Icon
             name={'plus'}
+            size={30}
+            color={'white'}
+            style={{
+              ...{padding: 10, borderRadius: 100, backgroundColor: '#FE6F5F'},
+            }}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={(e) => this.props.navigation.navigate('AddFriend')}
+          style={{
+            ...{
+              bottom: 0,
+              right: 0,
+              position: 'absolute',
+              zIndex: 50,
+              margin: 20,
+              marginBottom: 80,
+              justifyContent: 'center',
+              alignItems: 'center',
+            },
+          }}>
+          <MaterialIcon
+            name={'map-outline'}
+            onPress={(e) => this.props.navigation.navigate('TrackerStack')}
             size={30}
             color={'white'}
             style={{

@@ -87,7 +87,6 @@ export default class List extends React.Component {
   }
 
   renderCardPending = (val, index) => {
-    console.log(val);
     return (
       <TouchableOpacity
         key={index}

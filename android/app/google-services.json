@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "877401710161",
+    "firebase_url": "https://justtype-1.firebaseio.com",
+    "project_id": "justtype-1",
+    "storage_bucket": "justtype-1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:877401710161:android:55de021ca9306573e3e270",
+        "android_client_info": {
+          "package_name": "com.justtype"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "877401710161-fvt0mevm1aqi4dapt9d8o6ce7euljodt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCdkrOii4MEVWfGqrLcuAvX4JK9ZR-Qio"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "877401710161-fvt0mevm1aqi4dapt9d8o6ce7euljodt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

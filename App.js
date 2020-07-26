@@ -8,7 +8,7 @@ import MainStore from './src/redux/store';
 import {PersistGate} from 'redux-persist/integration/react';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import {AppState} from 'react-native';
+import {AppState, Image, View} from 'react-native';
 
 class App extends React.Component {
   state = {
@@ -16,6 +16,7 @@ class App extends React.Component {
     user: {},
     initializing: true,
     subscribe: false,
+    splash: true,
   };
 
   handleChangeAppState = (nextAppState) => {
@@ -76,6 +77,12 @@ class App extends React.Component {
       subscribe: auth().onAuthStateChanged(this.onAuthStateChanged),
     });
     AppState.addEventListener('change', this.handleChangeAppState);
+
+    setTimeout(() => {
+      this.setState({
+        splash: false,
+      });
+    }, 2000);
   }
 
   componentWillUnmount() {
@@ -91,8 +98,28 @@ class App extends React.Component {
       <Provider store={MainStore.store}>
         <PersistGate persistor={MainStore.persistor}>
           <NavigationContainer>
-            {!this.state.user && <Auth changePage={this.changePage} />}
-            {this.state.user && <Main changePage={this.changePage} />}
+            {this.state.splash && (
+              <View
+                style={{
+                  ...{
+                    flex: 1,
+                    backgroundColor: 'white',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  },
+                }}>
+                <Image
+                  style={{...{width: 135, height: 135}}}
+                  source={require('./src/assets/ic_launcher.png')}
+                />
+              </View>
+            )}
+            {!this.state.splash && (
+              <>
+                {!this.state.user && <Auth changePage={this.changePage} />}
+                {this.state.user && <Main changePage={this.changePage} />}
+              </>
+            )}
           </NavigationContainer>
         </PersistGate>
       </Provider>

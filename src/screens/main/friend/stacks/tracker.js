@@ -18,6 +18,8 @@ class Tracker extends React.Component {
     this.state = {
       latitude: 0.7893,
       longitude: 113.9213,
+      latitudeDelta: 0.011,
+      longitudeDelta: 0.011,
       observer: false,
       observerUser: false,
       dataUser: false,
@@ -49,20 +51,16 @@ class Tracker extends React.Component {
                     .where('uid', '==', auth()._user.uid)
                     .onSnapshot((querySnapshot) => {
                       querySnapshot.forEach((val) => {
-                        this.setState(
-                          {
-                            dataUser: {...{id: val.id}, ...val.data()},
-                          },
-                          () => {
-                            firestore()
-                              .collection('userDetails')
-                              .doc(val.id)
-                              .update({
-                                latitude: initPosition.coords.latitude,
-                                longitude: initPosition.coords.longitude,
-                              });
-                          },
-                        );
+                        this.setState({
+                          dataUser: {...{id: val.id}, ...val.data()},
+                        });
+                        firestore()
+                          .collection('userDetails')
+                          .doc(val.id)
+                          .update({
+                            latitude: initPosition.coords.latitude,
+                            longitude: initPosition.coords.longitude,
+                          });
                       });
                     }),
                   latitude: initPosition.coords.latitude,
@@ -103,21 +101,17 @@ class Tracker extends React.Component {
                 () => {
                   this.setState({
                     observer: GeoLocation.watchPosition((position) => {
-                      this.setState(
-                        {
+                      firestore()
+                        .collection('userDetails')
+                        .doc(this.props.auth.detail.id)
+                        .update({
                           latitude: position.coords.latitude,
                           longitude: position.coords.longitude,
-                        },
-                        () => {
-                          firestore()
-                            .collection('userDetails')
-                            .doc(this.props.auth.detail.id)
-                            .update({
-                              latitude: this.state.latitude,
-                              longitude: this.state.longitude,
-                            });
-                        },
-                      );
+                        });
+                      this.setState({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                      });
                     }),
                   });
                 },
@@ -146,6 +140,12 @@ class Tracker extends React.Component {
     GeoLocation.clearWatch(this.state.observer);
   }
 
+  onRegionChange = (region) => {
+    this.setState({
+      region,
+    });
+  };
+
   render() {
     return (
       <MapView
@@ -158,13 +158,16 @@ class Tracker extends React.Component {
         }}>
         {this.state.dataUser && (
           <Marker
+            key={this.state.dataUser.uid}
             coordinate={{
               latitude: this.state.latitude,
               longitude: this.state.longitude,
             }}>
             {this.state.dataUser.avatar && (
               <Image
-                style={{...{width: 50, height: 50, borderRadius: 25}}}
+                style={{
+                  ...{width: 50, height: 50, borderRadius: 25, marginLeft: 5},
+                }}
                 source={{uri: this.state.dataUser.avatar}}
               />
             )}
@@ -191,38 +194,56 @@ class Tracker extends React.Component {
         )}
 
         {this.state.friends.map((val, index) => {
-          val.latitude && (
-            <Marker
-              coordinate={{
-                latitude: val.latitude,
-                longitude: val.longitude,
-              }}>
-              {val.avatar && (
-                <Image
-                  style={{...{width: 50, height: 50, borderRadius: 25}}}
-                  source={{uri: val.avatar}}
-                />
-              )}
-              {!val.avatar && (
-                <Text
-                  style={{
-                    ...{
-                      width: 50,
-                      height: 50,
-                      borderRadius: 25,
-                      backgroundColor: 'white',
-                      textAlign: 'center',
-                      textAlignVertical: 'center',
-                      fontWeight: 'bold',
-                      fontSize: 20,
-                      color: '#2C3E66',
-                      elevation: 3,
-                    },
+          return (
+            <>
+              {val.latitude && (
+                <Marker
+                  key={index}
+                  onPress={(e) => {
+                    this.props.navigation.navigate('ChatStack', {
+                      chatId: val.chatId,
+                      friendUid: val.uid,
+                      meUid: auth()._user.uid,
+                    });
+                  }}
+                  coordinate={{
+                    latitude: val.latitude,
+                    longitude: val.longitude,
                   }}>
-                  {val.name.slice(0, 2).toUpperCase()}
-                </Text>
+                  {val.avatar && (
+                    <Image
+                      style={{
+                        ...{
+                          width: 50,
+                          height: 50,
+                          borderRadius: 25,
+                        },
+                      }}
+                      source={{uri: val.avatar}}
+                    />
+                  )}
+                  {!val.avatar && (
+                    <Text
+                      style={{
+                        ...{
+                          width: 50,
+                          height: 50,
+                          borderRadius: 25,
+                          backgroundColor: 'white',
+                          textAlign: 'center',
+                          textAlignVertical: 'center',
+                          fontWeight: 'bold',
+                          fontSize: 20,
+                          color: '#2C3E66',
+                          elevation: 3,
+                        },
+                      }}>
+                      {val.name.slice(0, 2).toUpperCase()}
+                    </Text>
+                  )}
+                </Marker>
               )}
-            </Marker>
+            </>
           );
         })}
       </MapView>

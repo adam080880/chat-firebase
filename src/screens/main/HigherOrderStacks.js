@@ -1,5 +1,10 @@
 import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
+import {Alert} from 'react-native';
+import {PERMISSIONS, RESULTS, request, check} from 'react-native-permissions';
+import GeoLocation from '@react-native-community/geolocation';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 import TabStack from './index';
 import ChatStack from './chat/stacks/chat';
@@ -14,6 +19,87 @@ export default class HigherOrderStacks extends React.Component {
   TabStackInjected = (changePage) => (props) => (
     <TabStack changePage={changePage} {...props} />
   );
+
+  handleMove = () => {
+    check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION).then((res) => {
+      switch (res) {
+        case RESULTS.UNAVAILABLE:
+          request(
+            PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+          ).then((result) => {});
+          break;
+        case RESULTS.DENIED:
+          request(
+            PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+          ).then((result) => {});
+          break;
+        case RESULTS.GRANTED:
+          GeoLocation.getCurrentPosition(
+            (initPosition) => {
+              this.setState(
+                {
+                  observerUser: firestore()
+                    .collection('userDetails')
+                    .where('uid', '==', auth()._user.uid)
+                    .onSnapshot((querySnapshot) => {
+                      querySnapshot.forEach((val) => {
+                        this.setState(
+                          {
+                            dataUser: {...{id: val.id}, ...val.data()},
+                          },
+                          () => {
+                            firestore()
+                              .collection('userDetails')
+                              .doc(val.id)
+                              .update({
+                                latitude: initPosition.coords.latitude,
+                                longitude: initPosition.coords.longitude,
+                              });
+                          },
+                        );
+                      });
+                    }),
+                },
+                () => {
+                  this.setState({
+                    observer: GeoLocation.watchPosition((position) => {
+                      this.setState(
+                        {
+                          latitude: position.coords.latitude,
+                          longitude: position.coords.longitude,
+                        },
+                        () => {
+                          firestore()
+                            .collection('userDetails')
+                            .doc(this.props.auth.detail.id)
+                            .update({
+                              latitude: this.state.latitude,
+                              longitude: this.state.longitude,
+                            });
+                        },
+                      );
+                    }),
+                  });
+                },
+              );
+            },
+            (e) => {
+              Alert.alert(e.message);
+              this.props.navigation.goBack();
+            },
+          );
+          break;
+        case RESULTS.BLOCKED:
+          request(
+            PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+          ).then((result) => {});
+          break;
+        default:
+          console.log(res);
+      }
+    });
+  };
+
   render() {
     return (
       <Stack.Navigator>

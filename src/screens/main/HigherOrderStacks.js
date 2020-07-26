@@ -20,6 +20,18 @@ export default class HigherOrderStacks extends React.Component {
     <TabStack changePage={changePage} {...props} />
   );
 
+  state = {
+    latitude: 0.7893,
+    longitude: 113.9213,
+    latitudeDelta: 0.011,
+    longitudeDelta: 0.011,
+    observer: false,
+    observerUser: false,
+    dataUser: false,
+    observerFriend: false,
+    friends: [],
+  };
+
   handleMove = () => {
     check(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION).then((res) => {
       switch (res) {
@@ -99,6 +111,15 @@ export default class HigherOrderStacks extends React.Component {
       }
     });
   };
+
+  componentDidMount() {
+    this.handleMove();
+  }
+
+  componentWillUnmount() {
+    this.state.observerUser();
+    GeoLocation.clearWatch(this.state.observer);
+  }
 
   render() {
     return (
